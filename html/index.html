@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sabino Control Room</title>
+    <style>
+        :root {
+            --ink: #16191c;
+            --paper: #f6f4ee;
+            --panel: #ffffff;
+            --line: #e2ddd0;
+            --brass: #a9742f;
+            --brass-deep: #7e561f;
+            --pine: #2f5d4f;
+            --pine-soft: #e7efe9;
+            --rust: #b1453c;
+            --rust-soft: #f7e7e3;
+            --slate: #5a6066;
+            --shadow: 0 1px 2px rgba(22, 25, 28, .04), 0 8px 24px rgba(22, 25, 28, .06);
+            font-size: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Iowan Old Style', 'Georgia', serif;
+            background: var(--paper);
+            color: var(--ink);
+            min-height: 100vh;
+        }
+
+        .mono {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            letter-spacing: .02em;
+        }
+
+        /* ---------- Login ---------- */
+        #login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 380px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 40px 36px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-card h1 {
+            font-size: 1.5rem;
+            margin: 0 0 4px;
+            letter-spacing: .01em;
+        }
+
+        .login-card .sub {
+            color: var(--slate);
+            font-size: .85rem;
+            margin: 0 0 28px;
+        }
+
+        .login-card label {
+            display: block;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--slate);
+            margin-bottom: 6px;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            font-size: .95rem;
+            font-family: inherit;
+            margin-bottom: 16px;
+            background: #fdfcf9;
+        }
+
+        .login-card input:focus {
+            outline: none;
+            border-color: var(--brass);
+        }
+
+        .btn {
+            appearance: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: .85rem;
+            padding: 11px 18px;
+            border-radius: 3px;
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
+
+        .btn-primary {
+            background: var(--ink);
+            color: #fdfcf9;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+        }
+
+        .error-text {
+            color: var(--rust);
+            font-size: .82rem;
+            margin: -8px 0 14px;
+            display: none;
+        }
+
+        /* ---------- Shell ---------- */
+        #app {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--ink);
+            color: #fdfcf9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .brand .mark {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: .01em;
+        }
+
+        .brand .tag {
+            font-size: .7rem;
+            color: #c9c2ad;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+        }
+
+        .topbar .right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-size: .8rem;
+            color: #cbc6b8;
+        }
+
+        .logout-link {
+            color: #e9c98a;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        nav.tabs {
+            display: flex;
+            gap: 2px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--line);
+            padding: 0 28px;
+            overflow-x: auto;
+        }
+
+        nav.tabs button {
+            appearance: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 14px 16px;
+            font-size: .85rem;
+            color: var(--slate);
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        nav.tabs button.active {
+            color: var(--ink);
+            border-bottom-color: var(--brass);
+            font-weight: 600;
+        }
+
+        main {
+            padding: 28px;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 22px 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .panel h2 {
+            margin: 0 0 4px;
+            font-size: 1.1rem;
+        }
+
+        .panel .desc {
+            color: var(--slate);
+            font-size: .82rem;
+            margin: 0 0 18px;
+        }
+
+        /* Stat cards */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 18px 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card .num {
+            font-size: 1.9rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-card .label {
+            font-size: .74rem;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--slate);
+            margin-top: 8px;
+        }
+
+        .stat-card.paid .num {
+            color: var(--pine);
+        }
+
+        .stat-card.expired .num {
+            color: var(--rust);
+        }
+
+        .stat-card.pending .num {
+            color: var(--brass-deep);
+        }
+
+        /* Controls row */
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .controls-row input[type="text"],
+        .controls-row select {
+            padding: 9px 11px;
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            font-family: inherit;
+            font-size: .85rem;
+            background: #fdfcf9;
+        }
+
+        .controls-row input[type="text"] {
+            min-width: 220px;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .85rem;
+        }
+
+        thead th {
+            text-align: left;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--slate);
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        tbody td {
+            padding: 11px 10px;
+            border-bottom: 1px solid #efebe0;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #fbf9f3;
+        }
+
+        .name-cell .school-name {
+            font-weight: 600;
+        }
+
+        .name-cell .school-email {
+            color: var(--slate);
+            font-size: .78rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .badge.completed,
+        .badge.grace_period {
+            background: var(--pine-soft);
+            color: var(--pine);
+        }
+
+        .badge.expired {
+            background: var(--rust-soft);
+            color: var(--rust);
+        }
+
+        .badge.pending {
+            background: #f3ead4;
+            color: var(--brass-deep);
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .mini-btn {
+            appearance: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: .72rem;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 3px;
+            border: 1px solid var(--line);
+            background: #fff;
+        }
+
+        .mini-btn.paid {
+            border-color: var(--pine);
+            color: var(--pine);
+        }
+
+        .mini-btn.paid:hover {
+            background: var(--pine-soft);
+        }
+
+        .mini-btn.expire {
+            border-color: var(--rust);
+            color: var(--rust);
+        }
+
+        .mini-btn.expire:hover {
+            background: var(--rust-soft);
+        }
+
+        .mini-btn.unpaid {
+            border-color: var(--brass-deep);
+            color: var(--brass-deep);
+        }
+
+        .mini-btn.unpaid:hover {
+            background: #f3ead4;
+        }
+
+        .mini-btn.del {
+            color: var(--slate);
+        }
+
+        .mini-btn.del:hover {
+            background: #f1efe9;
+            color: var(--rust);
+        }
+
+        .pager {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+            font-size: .8rem;
+            color: var(--slate);
+        }
+
+        .pager button {
+            background: none;
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .pager button:disabled {
+            opacity: .4;
+            cursor: default;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 36px 0;
+            color: var(--slate);
+            font-size: .88rem;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 36px 0;
+            color: var(--slate);
+            font-size: .85rem;
+        }
+
+        /* Push notifications */
+        .push-grid {
+            display: grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap: 20px;
+        }
+
+        @media (max-width:900px) {
+            .push-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--slate);
+            margin-bottom: 6px;
+        }
+
+        .field input[type="text"],
+        .field textarea {
+            width: 100%;
+            padding: 10px 11px;
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            font-family: inherit;
+            font-size: .9rem;
+            background: #fdfcf9;
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .char-count {
+            font-size: .7rem;
+            color: var(--slate);
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .audience-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .audience-btn {
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--line);
+            background: #fdfcf9;
+            border-radius: 4px;
+            padding: 13px 14px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .audience-btn:hover {
+            border-color: var(--brass);
+            background: #fff;
+        }
+
+        .audience-btn .title {
+            font-weight: 700;
+            font-size: .88rem;
+        }
+
+        .audience-btn .hint {
+            font-size: .75rem;
+            color: var(--slate);
+            margin-top: 2px;
+        }
+
+        .audience-btn .arrow {
+            color: var(--brass);
+            font-size: 1.1rem;
+        }
+
+        .audience-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .single-send {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .single-send input {
+            flex: 1;
+        }
+
+        .send-log {
+            margin-top: 18px;
+        }
+
+        .log-entry {
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--pine);
+            border-radius: 3px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            font-size: .8rem;
+            background: #fdfcf9;
+        }
+
+        .log-entry.fail {
+            border-left-color: var(--rust);
+        }
+
+        .log-entry .meta {
+            color: var(--slate);
+            font-size: .72rem;
+            margin-top: 3px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--ink);
+            color: #fdfcf9;
+            padding: 13px 18px;
+            border-radius: 4px;
+            font-size: .85rem;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all .25s ease;
+            pointer-events: none;
+            max-width: 340px;
+            z-index: 50;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.error {
+            background: var(--rust);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(22, 25, 28, .45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--panel);
+            border-radius: 4px;
+            padding: 26px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: var(--shadow);
+        }
+
+        .modal h3 {
+            margin: 0 0 8px;
+            font-size: 1.05rem;
+        }
+
+        .modal p {
+            color: var(--slate);
+            font-size: .86rem;
+            margin: 0 0 20px;
+        }
+
+        .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-ghost {
+            background: none;
+            border: 1px solid var(--line);
+            color: var(--ink);
+        }
+
+        .btn-danger {
+            background: var(--rust);
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===================== LOGIN ===================== -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h1>Control Room</h1>
+            <p class="sub">Admin access for Sabino Edu — schools, billing &amp; broadcasts.</p>
+            <form id="login-form">
+                <label for="api-base">API base URL</label>
+                <input type="text" id="api-base" class="mono"
+                    placeholder="https://sabino-cross-county-mobile-app-back.vercel.app/api" autocomplete="off" />
+                <label for="admin-secret">Admin secret</label>
+                <input type="password" id="admin-secret" placeholder="••••••••••••" autocomplete="off" />
+                <div class="error-text" id="login-error">Invalid admin secret or unreachable API. Check the URL and try
+                    again.</div>
+                <button type="submit" class="btn btn-primary" id="login-btn">Enter control room</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================== APP SHELL ===================== -->
+    <div id="app">
+        <div class="topbar">
+            <div class="brand">
+                <span class="mark">Sabino</span>
+                <span class="tag">Control Room</span>
+            </div>
+            <div class="right">
+                <span id="api-base-display" class="mono"></span>
+                <span class="logout-link" id="logout-btn">Sign out</span>
+            </div>
+        </div>
+
+        <nav class="tabs">
+            <button data-view="dashboard" class="active">Dashboard</button>
+            <button data-view="schools">Schools</button>
+            <button data-view="students">Students</button>
+            <button data-view="push">Push notifications</button>
+        </nav>
+
+        <main>
+
+            <!-- ---------- DASHBOARD ---------- -->
+            <section class="view active" id="view-dashboard">
+                <div class="stat-grid" id="stat-grid">
+                    <div class="loading-state">Loading overview…</div>
+                </div>
+                <div class="panel">
+                    <h2>Welcome back</h2>
+                    <p class="desc">Use the tabs above to manage school accounts, review enrolled students, or push a
+                        notification to every device. Everything here talks directly to your live backend — changes take
+                        effect immediately.</p>
+                </div>
+            </section>
+
+            <!-- ---------- SCHOOLS ---------- -->
+            <section class="view" id="view-schools">
+                <div class="panel">
+                    <h2>Schools</h2>
+                    <p class="desc">Every school account on the platform. Mark a school paid, unpaid, or expired —
+                        changes apply instantly.</p>
+                    <div class="controls-row">
+                        <input type="text" id="schools-search" placeholder="Search by name, email or phone…" />
+                        <select id="schools-status-filter">
+                            <option value="">All statuses</option>
+                            <option value="completed">Paid (completed)</option>
+                            <option value="grace_period">Grace period</option>
+                            <option value="pending">Unpaid (pending)</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div id="schools-table-wrap">
+                        <div class="loading-state">Loading schools…</div>
+                    </div>
+                    <div class="pager" id="schools-pager" style="display:none;">
+                        <span id="schools-pager-info"></span>
+                        <div>
+                            <button id="schools-prev">← Prev</button>
+                            <button id="schools-next">Next →</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- STUDENTS ---------- -->
+            <section class="view" id="view-students">
+                <div class="panel">
+                    <h2>Students</h2>
+                    <p class="desc">All students enrolled across every school.</p>
+                    <div class="controls-row">
+                        <input type="text" id="students-search" placeholder="Search by student name or email…" />
+                    </div>
+                    <div id="students-table-wrap">
+                        <div class="loading-state">Loading students…</div>
+                    </div>
+                    <div class="pager" id="students-pager" style="display:none;">
+                        <span id="students-pager-info"></span>
+                        <div>
+                            <button id="students-prev">← Prev</button>
+                            <button id="students-next">Next →</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- PUSH NOTIFICATIONS ---------- -->
+            <section class="view" id="view-push">
+                <div class="panel">
+                    <h2>Push notifications</h2>
+                    <p class="desc">Compose a message once, then choose who sees it. Sends via Expo to every registered
+                        device in the chosen audience.</p>
+                    <div class="push-grid">
+                        <div>
+                            <div class="field">
+                                <label for="push-title">Title</label>
+                                <input type="text" id="push-title" maxlength="65"
+                                    placeholder="e.g. New term, new features 🎉" />
+                            </div>
+                            <div class="field">
+                                <label for="push-body">Message</label>
+                                <textarea id="push-body" maxlength="180"
+                                    placeholder="Write the notification body…"></textarea>
+                                <div class="char-count"><span id="push-body-count">0</span>/180</div>
+                            </div>
+                            <div class="field">
+                                <label for="single-school-id">Send to one school (by school ID)</label>
+                                <div class="single-send">
+                                    <input type="text" id="single-school-id" placeholder="School ID" />
+                                    <button class="btn mini-btn paid" id="send-one-btn"
+                                        style="padding:10px 16px;">Send</button>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="version-input">Notify outdated app versions</label>
+                                <div class="single-send">
+                                    <input type="text" id="version-input" placeholder="Current version e.g. 2.0.0" />
+                                    <button class="btn mini-btn unpaid" id="send-version-btn"
+                                        style="padding:10px 16px;">Notify</button>
+                                </div>
+                            </div>
+                            <div class="send-log" id="send-log"></div>
+                        </div>
+
+                        <div>
+                            <div class="audience-list">
+                                <button class="audience-btn" id="send-all-btn" disabled>
+                                    <div>
+                                        <div class="title">Send to everyone</div>
+                                        <div class="hint">All registered devices, subscribed or not</div>
+                                    </div>
+                                    <span class="arrow">→</span>
+                                </button>
+                                <button class="audience-btn" id="send-subscribed-btn" disabled>
+                                    <div>
+                                        <div class="title">Send to paying schools</div>
+                                        <div class="hint">Active subscribers only — good for retention</div>
+                                    </div>
+                                    <span class="arrow">→</span>
+                                </button>
+                                <button class="audience-btn" id="send-unsubscribed-btn" disabled>
+                                    <div>
+                                        <div class="title">Send to unpaid schools</div>
+                                        <div class="hint">No active subscription — good for upgrade nudges</div>
+                                    </div>
+                                    <span class="arrow">→</span>
+                                </button>
+                                <button class="audience-btn" id="send-anonymous-btn" disabled>
+                                    <div>
+                                        <div class="title">Send to anonymous devices</div>
+                                        <div class="hint">Allowed notifications but never logged in</div>
+                                    </div>
+                                    <span class="arrow">→</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="modal-overlay" id="confirm-overlay">
+        <div class="modal">
+            <h3 id="confirm-title">Are you sure?</h3>
+            <p id="confirm-text"></p>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="confirm-cancel">Cancel</button>
+                <button class="btn btn-danger" id="confirm-ok">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            // ---------------- State ----------------
+            let API_BASE = sessionStorage.getItem('sabino_api_base') || '';
+            let ADMIN_SECRET = sessionStorage.getItem('sabino_admin_secret') || '';
+
+            let schoolsPage = 1, schoolsTotalPages = 1;
+            let studentsPage = 1, studentsTotalPages = 1;
+            let schoolsSearchDebounce, studentsSearchDebounce;
+
+            // ---------------- Helpers ----------------
+            function showToast(msg, isError) {
+                const t = document.getElementById('toast');
+                t.textContent = msg;
+                t.className = 'toast show' + (isError ? ' error' : '');
+                clearTimeout(t._timer);
+                t._timer = setTimeout(() => t.classList.remove('show'), 3800);
+            }
+
+            function escapeHtml(str) {
+                if (str === null || str === undefined) return '';
+                return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            }
+
+            function formatDate(d) {
+                if (!d) return '—';
+                const date = new Date(d);
+                if (isNaN(date.getTime())) return '—';
+                return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+
+            function statusLabel(s) {
+                return { completed: 'Paid', grace_period: 'Grace period', pending: 'Unpaid', expired: 'Expired' }[s] || s || 'Unknown';
+            }
+
+            async function apiCall(path, opts) {
+                opts = opts || {};
+                const headers = Object.assign({ 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET }, opts.headers || {});
+                const res = await fetch(API_BASE.replace(/\/$/, '') + path, Object.assign({}, opts, { headers }));
+                let data;
+                try { data = await res.json(); } catch (e) { data = {}; }
+                if (!res.ok) {
+                    throw new Error(data.error || data.message || `Request failed (${res.status})`);
+                }
+                return data;
+            }
+
+            function confirmDialog(title, text) {
+                return new Promise((resolve) => {
+                    const overlay = document.getElementById('confirm-overlay');
+                    document.getElementById('confirm-title').textContent = title;
+                    document.getElementById('confirm-text').textContent = text;
+                    overlay.classList.add('show');
+                    function cleanup(result) {
+                        overlay.classList.remove('show');
+                        okBtn.removeEventListener('click', onOk);
+                        cancelBtn.removeEventListener('click', onCancel);
+                        resolve(result);
+                    }
+                    const okBtn = document.getElementById('confirm-ok');
+                    const cancelBtn = document.getElementById('confirm-cancel');
+                    function onOk() { cleanup(true); }
+                    function onCancel() { cleanup(false); }
+                    okBtn.addEventListener('click', onOk);
+                    cancelBtn.addEventListener('click', onCancel);
+                });
+            }
+
+            // ---------------- Login ----------------
+            document.getElementById('login-form').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const base = document.getElementById('api-base').value.trim();
+                const secret = document.getElementById('admin-secret').value.trim();
+                const errEl = document.getElementById('login-error');
+                const btn = document.getElementById('login-btn');
+                errEl.style.display = 'none';
+
+                if (!base || !secret) {
+                    errEl.textContent = 'Please fill in both fields.';
+                    errEl.style.display = 'block';
+                    return;
+                }
+
+                API_BASE = base;
+                ADMIN_SECRET = secret;
+                btn.textContent = 'Checking…';
+                btn.disabled = true;
+
+                try {
+                    await apiCall('/admin/login', { method: 'POST' });
+                    sessionStorage.setItem('sabino_api_base', API_BASE);
+                    sessionStorage.setItem('sabino_admin_secret', ADMIN_SECRET);
+                    enterApp();
+                } catch (err) {
+                    errEl.textContent = err.message || 'Invalid admin secret or unreachable API.';
+                    errEl.style.display = 'block';
+                } finally {
+                    btn.textContent = 'Enter control room';
+                    btn.disabled = false;
+                }
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', function () {
+                sessionStorage.removeItem('sabino_api_base');
+                sessionStorage.removeItem('sabino_admin_secret');
+                API_BASE = ''; ADMIN_SECRET = '';
+                document.getElementById('app').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'flex';
+            });
+
+            function enterApp() {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                document.getElementById('api-base-display').textContent = API_BASE.replace(/^https?:\/\//, '');
+                document.querySelectorAll('.audience-btn').forEach(b => b.disabled = false);
+                loadDashboard();
+                loadSchools();
+                loadStudents();
+            }
+
+            // ---------------- Tabs ----------------
+            document.querySelectorAll('nav.tabs button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+                });
+            });
+
+            // ---------------- Dashboard ----------------
+            async function loadDashboard() {
+                const grid = document.getElementById('stat-grid');
+                try {
+                    const res = await apiCall('/admin/stats');
+                    const d = res.data;
+                    grid.innerHTML = `
+        <div class="stat-card"><div class="num">${d.totalSchools}</div><div class="label">Total schools</div></div>
+        <div class="stat-card paid"><div class="num">${d.paidSchools}</div><div class="label">Paid</div></div>
+        <div class="stat-card pending"><div class="num">${d.pendingSchools}</div><div class="label">Unpaid</div></div>
+        <div class="stat-card expired"><div class="num">${d.expiredSchools}</div><div class="label">Expired</div></div>
+        <div class="stat-card"><div class="num">${d.totalStudents}</div><div class="label">Total students</div></div>
+        <div class="stat-card"><div class="num">${d.registeredDevices}</div><div class="label">Registered devices</div></div>
+      `;
+                } catch (err) {
+                    grid.innerHTML = `<div class="empty-state">Couldn't load overview: ${escapeHtml(err.message)}</div>`;
+                }
+            }
+
+            // ---------------- Schools ----------------
+            async function loadSchools() {
+                const wrap = document.getElementById('schools-table-wrap');
+                const search = document.getElementById('schools-search').value.trim();
+                const status = document.getElementById('schools-status-filter').value;
+                wrap.innerHTML = '<div class="loading-state">Loading schools…</div>';
+
+                const params = new URLSearchParams({ page: schoolsPage, limit: 20 });
+                if (search) params.set('search', search);
+                if (status) params.set('status', status);
+
+                try {
+                    const res = await apiCall('/admin/schools?' + params.toString());
+                    renderSchoolsTable(res.data);
+                    schoolsTotalPages = res.pagination.totalPages || 1;
+                    document.getElementById('schools-pager').style.display = res.pagination.total > 0 ? 'flex' : 'none';
+                    document.getElementById('schools-pager-info').textContent =
+                        `Page ${res.pagination.page} of ${schoolsTotalPages} · ${res.pagination.total} schools`;
+                    document.getElementById('schools-prev').disabled = schoolsPage <= 1;
+                    document.getElementById('schools-next').disabled = schoolsPage >= schoolsTotalPages;
+                } catch (err) {
+                    wrap.innerHTML = `<div class="empty-state">Couldn't load schools: ${escapeHtml(err.message)}</div>`;
+                }
+            }
+
+            function renderSchoolsTable(rows) {
+                const wrap = document.getElementById('schools-table-wrap');
+                if (!rows.length) {
+                    wrap.innerHTML = '<div class="empty-state">No schools match your search.</div>';
+                    return;
+                }
+                let html = `<table><thead><tr>
+      <th>School</th><th>Country</th><th>Status</th><th>Expires</th><th>Joined</th><th>Actions</th>
+    </tr></thead><tbody>`;
+                rows.forEach(s => {
+                    html += `<tr data-id="${s.id}">
+        <td class="name-cell">
+          <div class="school-name">${escapeHtml(s.name)}</div>
+          <div class="school-email">${escapeHtml(s.email)}</div>
+        </td>
+        <td>${escapeHtml(s.country || '—')}</td>
+        <td><span class="badge ${s.payment_status}">${statusLabel(s.payment_status)}</span></td>
+        <td>${formatDate(s.subscription_expiry)}</td>
+        <td>${formatDate(s.created_at)}</td>
+        <td>
+          <div class="row-actions">
+            <button class="mini-btn paid" data-action="paid" data-id="${s.id}" data-name="${escapeHtml(s.name)}">Mark paid</button>
+            <button class="mini-btn expire" data-action="expired" data-id="${s.id}" data-name="${escapeHtml(s.name)}">Mark expired</button>
+            <button class="mini-btn unpaid" data-action="pending" data-id="${s.id}" data-name="${escapeHtml(s.name)}">Mark unpaid</button>
+            <button class="mini-btn del" data-action="delete" data-id="${s.id}" data-name="${escapeHtml(s.name)}">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+                });
+                html += '</tbody></table>';
+                wrap.innerHTML = html;
+
+                wrap.querySelectorAll('button[data-action]').forEach(btn => {
+                    btn.addEventListener('click', () => handleSchoolAction(btn.dataset.action, btn.dataset.id, btn.dataset.name));
+                });
+            }
+
+            async function handleSchoolAction(action, id, name) {
+                if (action === 'delete') {
+                    const ok = await confirmDialog('Delete this school?', `This permanently removes "${name}" and cannot be undone.`);
+                    if (!ok) return;
+                    try {
+                        await apiCall(`/admin/schools/${id}`, { method: 'DELETE' });
+                        showToast(`${name} deleted.`);
+                        loadSchools(); loadDashboard();
+                    } catch (err) {
+                        showToast(err.message, true);
+                    }
+                    return;
+                }
+
+                const labels = { paid: 'mark paid', expired: 'mark expired', pending: 'mark unpaid' };
+                const statusMap = { paid: 'completed', expired: 'expired', pending: 'pending' };
+                const ok = await confirmDialog(`${labels[action][0].toUpperCase() + labels[action].slice(1)}?`, `Set "${name}" to ${labels[action]}?`);
+                if (!ok) return;
+
+                try {
+                    const res = await apiCall(`/admin/schools/${id}/payment-status`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ status: statusMap[action] })
+                    });
+                    showToast(res.message || 'Updated.');
+                    loadSchools(); loadDashboard();
+                } catch (err) {
+                    showToast(err.message, true);
+                }
+            }
+
+            document.getElementById('schools-search').addEventListener('input', () => {
+                clearTimeout(schoolsSearchDebounce);
+                schoolsSearchDebounce = setTimeout(() => { schoolsPage = 1; loadSchools(); }, 350);
+            });
+            document.getElementById('schools-status-filter').addEventListener('change', () => { schoolsPage = 1; loadSchools(); });
+            document.getElementById('schools-prev').addEventListener('click', () => { if (schoolsPage > 1) { schoolsPage--; loadSchools(); } });
+            document.getElementById('schools-next').addEventListener('click', () => { if (schoolsPage < schoolsTotalPages) { schoolsPage++; loadSchools(); } });
+
+            // ---------------- Students ----------------
+            async function loadStudents() {
+                const wrap = document.getElementById('students-table-wrap');
+                const search = document.getElementById('students-search').value.trim();
+                wrap.innerHTML = '<div class="loading-state">Loading students…</div>';
+
+                const params = new URLSearchParams({ page: studentsPage, limit: 20 });
+                if (search) params.set('search', search);
+
+                try {
+                    const res = await apiCall('/admin/students?' + params.toString());
+                    renderStudentsTable(res.data);
+                    studentsTotalPages = res.pagination.totalPages || 1;
+                    document.getElementById('students-pager').style.display = res.pagination.total > 0 ? 'flex' : 'none';
+                    document.getElementById('students-pager-info').textContent =
+                        `Page ${res.pagination.page} of ${studentsTotalPages} · ${res.pagination.total} students`;
+                    document.getElementById('students-prev').disabled = studentsPage <= 1;
+                    document.getElementById('students-next').disabled = studentsPage >= studentsTotalPages;
+                } catch (err) {
+                    wrap.innerHTML = `<div class="empty-state">Couldn't load students: ${escapeHtml(err.message)}</div>`;
+                }
+            }
+
+            function renderStudentsTable(rows) {
+                const wrap = document.getElementById('students-table-wrap');
+                if (!rows.length) {
+                    wrap.innerHTML = '<div class="empty-state">No students match your search.</div>';
+                    return;
+                }
+                let html = `<table><thead><tr><th>Student</th><th>Email</th><th>School</th><th>Joined</th></tr></thead><tbody>`;
+                rows.forEach(s => {
+                    html += `<tr>
+        <td>${escapeHtml((s.first_name || '') + ' ' + (s.last_name || ''))}</td>
+        <td>${escapeHtml(s.email || '—')}</td>
+        <td>${escapeHtml(s.school_name || '—')}</td>
+        <td>${formatDate(s.created_at)}</td>
+      </tr>`;
+                });
+                html += '</tbody></table>';
+                wrap.innerHTML = html;
+            }
+
+            document.getElementById('students-search').addEventListener('input', () => {
+                clearTimeout(studentsSearchDebounce);
+                studentsSearchDebounce = setTimeout(() => { studentsPage = 1; loadStudents(); }, 350);
+            });
+            document.getElementById('students-prev').addEventListener('click', () => { if (studentsPage > 1) { studentsPage--; loadStudents(); } });
+            document.getElementById('students-next').addEventListener('click', () => { if (studentsPage < studentsTotalPages) { studentsPage++; loadStudents(); } });
+
+            // ---------------- Push notifications ----------------
+            const titleInput = document.getElementById('push-title');
+            const bodyInput = document.getElementById('push-body');
+            const bodyCount = document.getElementById('push-body-count');
+            bodyInput.addEventListener('input', () => { bodyCount.textContent = bodyInput.value.length; });
+
+            function logSend(label, ok, detail) {
+                const log = document.getElementById('send-log');
+                const entry = document.createElement('div');
+                entry.className = 'log-entry' + (ok ? '' : ' fail');
+                entry.innerHTML = `<div>${escapeHtml(label)}</div><div class="meta">${escapeHtml(detail)}</div>`;
+                log.prepend(entry);
+            }
+
+            function getPushPayload() {
+                const title = titleInput.value.trim();
+                const body = bodyInput.value.trim();
+                if (!title || !body) {
+                    showToast('Add a title and message first.', true);
+                    return null;
+                }
+                return { title, body };
+            }
+
+            async function sendBroadcast(endpoint, label, extra) {
+                const payload = getPushPayload();
+                if (!payload) return;
+                Object.assign(payload, extra || {});
+
+                const ok = await confirmDialog(`Send "${payload.title}"?`, `This will broadcast to: ${label}.`);
+                if (!ok) return;
+
+                try {
+                    const res = await apiCall(`/admin/notifications/${endpoint}`, { method: 'POST', body: JSON.stringify(payload) });
+                    showToast(`Sent to ${label}.`);
+                    logSend(label, true, `${res.sent || 0} sent, ${res.failed || 0} failed (of ${res.total ?? '—'})`);
+                } catch (err) {
+                    showToast(err.message, true);
+                    logSend(label, false, err.message);
+                }
+            }
+
+            document.getElementById('send-all-btn').addEventListener('click', () => sendBroadcast('send-all', 'everyone'));
+            document.getElementById('send-subscribed-btn').addEventListener('click', () => sendBroadcast('send-subscribed', 'paying schools'));
+            document.getElementById('send-unsubscribed-btn').addEventListener('click', () => sendBroadcast('send-unsubscribed', 'unpaid schools'));
+            document.getElementById('send-anonymous-btn').addEventListener('click', () => sendBroadcast('send-anonymous', 'anonymous devices'));
+
+            document.getElementById('send-one-btn').addEventListener('click', async () => {
+                const schoolId = document.getElementById('single-school-id').value.trim();
+                if (!schoolId) { showToast('Enter a school ID first.', true); return; }
+                const payload = getPushPayload();
+                if (!payload) return;
+                payload.school_id = schoolId;
+                try {
+                    const res = await apiCall('/admin/notifications/send-one', { method: 'POST', body: JSON.stringify(payload) });
+                    showToast(res.message || 'Sent.');
+                    logSend(`School #${schoolId}`, true, res.message || 'Delivered');
+                } catch (err) {
+                    showToast(err.message, true);
+                    logSend(`School #${schoolId}`, false, err.message);
+                }
+            });
+
+            document.getElementById('send-version-btn').addEventListener('click', async () => {
+                const version = document.getElementById('version-input').value.trim();
+                if (!version) { showToast('Enter a version number.', true); return; }
+                const ok = await confirmDialog('Notify outdated devices?', `Nudge every device not on version ${version} to update.`);
+                if (!ok) return;
+                try {
+                    const res = await apiCall('/admin/notifications/version-update', { method: 'POST', body: JSON.stringify({ current_version: version }) });
+                    showToast(`Notified ${res.sent || 0} devices.`);
+                    logSend('Version update nudge', true, `${res.sent || 0} sent, ${res.failed || 0} failed`);
+                } catch (err) {
+                    showToast(err.message, true);
+                    logSend('Version update nudge', false, err.message);
+                }
+            });
+
+            // ---------------- Boot ----------------
+            if (API_BASE && ADMIN_SECRET) {
+                document.getElementById('api-base').value = API_BASE;
+                apiCall('/admin/login', { method: 'POST' }).then(enterApp).catch(() => {
+                    sessionStorage.removeItem('sabino_api_base');
+                    sessionStorage.removeItem('sabino_admin_secret');
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>
