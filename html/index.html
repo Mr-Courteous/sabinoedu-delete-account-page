@@ -662,6 +662,151 @@
             background: var(--rust);
             color: #fff;
         }
+
+        /* --- Ultra-Responsive Styles (<600px & <300px) --- */
+        @media (max-width: 600px) {
+            .topbar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .topbar .right {
+                justify-content: space-between;
+                width: 100%;
+                min-width: 0;
+            }
+
+            #api-base-display {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                flex: 1;
+                margin-right: 12px;
+            }
+
+            main {
+                padding: 12px;
+            }
+
+            .panel {
+                padding: 16px 12px;
+            }
+
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls-row input[type="text"],
+            .controls-row select,
+            .controls-row .btn {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .single-send {
+                flex-direction: column;
+            }
+
+            .pager {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .pager>div {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .audience-btn {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .audience-btn .arrow {
+                align-self: flex-end;
+                margin-top: -15px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+
+            .modal-actions button {
+                width: 100%;
+            }
+
+            #schools-table-wrap,
+            #students-table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -12px;
+                padding: 0 12px;
+            }
+
+            table {
+                min-width: 500px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .login-card {
+                padding: 24px 16px;
+            }
+
+            nav.tabs {
+                padding: 0 8px;
+            }
+
+            nav.tabs button {
+                padding: 12px 10px;
+                font-size: .8rem;
+            }
+
+            .toast {
+                left: 12px;
+                right: 12px;
+                width: auto;
+                bottom: 12px;
+                max-width: none;
+            }
+
+            .topbar .brand .mark {
+                font-size: 1.1rem;
+            }
+
+            .topbar .brand .tag {
+                font-size: .65rem;
+                display: none;
+                /* Hide tag on extremely small screens */
+            }
+
+            .topbar .right {
+                font-size: .75rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .panel h2 {
+                font-size: 1rem;
+            }
+
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-card .num {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 
