@@ -667,15 +667,14 @@
 
 <body>
 
-    <!-- ===================== LOGIN ===================== -->
     <div id="login-screen">
         <div class="login-card">
             <h1>Control Room</h1>
             <p class="sub">Admin access for Sabino Edu — schools, billing &amp; broadcasts.</p>
             <form id="login-form">
                 <label for="api-base">API base URL</label>
-                <input type="text" id="api-base" class="mono"
-                    placeholder="https://sabino-cross-county-mobile-app-back.vercel.app/api" autocomplete="off" />
+                <input type="text" id="api-base" class="mono" placeholder="https://your-backend.vercel.app/api"
+                    autocomplete="off" />
                 <label for="admin-secret">Admin secret</label>
                 <input type="password" id="admin-secret" placeholder="••••••••••••" autocomplete="off" />
                 <div class="error-text" id="login-error">Invalid admin secret or unreachable API. Check the URL and try
@@ -685,7 +684,6 @@
         </div>
     </div>
 
-    <!-- ===================== APP SHELL ===================== -->
     <div id="app">
         <div class="topbar">
             <div class="brand">
@@ -707,7 +705,6 @@
 
         <main>
 
-            <!-- ---------- DASHBOARD ---------- -->
             <section class="view active" id="view-dashboard">
                 <div class="stat-grid" id="stat-grid">
                     <div class="loading-state">Loading overview…</div>
@@ -720,12 +717,10 @@
                 </div>
             </section>
 
-            <!-- ---------- SCHOOLS ---------- -->
             <section class="view" id="view-schools">
                 <div class="panel">
                     <h2>Schools</h2>
-                    <p class="desc">Every school account on the platform. Mark a school paid, unpaid, or expired —
-                        changes apply instantly.</p>
+                    <p class="desc">Every school account on the platform.</p>
                     <div class="controls-row">
                         <input type="text" id="schools-search" placeholder="Search by name, email or phone…" />
                         <select id="schools-status-filter">
@@ -749,7 +744,6 @@
                 </div>
             </section>
 
-            <!-- ---------- STUDENTS ---------- -->
             <section class="view" id="view-students">
                 <div class="panel">
                     <h2>Students</h2>
@@ -770,7 +764,6 @@
                 </div>
             </section>
 
-            <!-- ---------- PUSH NOTIFICATIONS ---------- -->
             <section class="view" id="view-push">
                 <div class="panel">
                     <h2>Push notifications</h2>
@@ -1043,7 +1036,7 @@
                     return;
                 }
                 let html = `<table><thead><tr>
-      <th>School</th><th>Country</th><th>Status</th><th>Expires</th><th>Joined</th><th>Actions</th>
+      <th>School</th><th>Country</th><th>Status</th><th>Expires</th><th>Joined</th>
     </tr></thead><tbody>`;
                 rows.forEach(s => {
                     html += `<tr data-id="${s.id}">
@@ -1055,53 +1048,11 @@
         <td><span class="badge ${s.payment_status}">${statusLabel(s.payment_status)}</span></td>
         <td>${formatDate(s.subscription_expiry)}</td>
         <td>${formatDate(s.created_at)}</td>
-        <td>
-          <div class="row-actions">
-            <button class="mini-btn paid" data-action="paid" data-id="${s.id}" data-name="${escapeHtml(s.name)}">Mark paid</button>
-            <button class="mini-btn expire" data-action="expired" data-id="${s.id}" data-name="${escapeHtml(s.name)}">Mark expired</button>
-            <button class="mini-btn unpaid" data-action="pending" data-id="${s.id}" data-name="${escapeHtml(s.name)}">Mark unpaid</button>
-            <button class="mini-btn del" data-action="delete" data-id="${s.id}" data-name="${escapeHtml(s.name)}">Delete</button>
-          </div>
-        </td>
       </tr>`;
                 });
                 html += '</tbody></table>';
                 wrap.innerHTML = html;
 
-                wrap.querySelectorAll('button[data-action]').forEach(btn => {
-                    btn.addEventListener('click', () => handleSchoolAction(btn.dataset.action, btn.dataset.id, btn.dataset.name));
-                });
-            }
-
-            async function handleSchoolAction(action, id, name) {
-                if (action === 'delete') {
-                    const ok = await confirmDialog('Delete this school?', `This permanently removes "${name}" and cannot be undone.`);
-                    if (!ok) return;
-                    try {
-                        await apiCall(`/admin/schools/${id}`, { method: 'DELETE' });
-                        showToast(`${name} deleted.`);
-                        loadSchools(); loadDashboard();
-                    } catch (err) {
-                        showToast(err.message, true);
-                    }
-                    return;
-                }
-
-                const labels = { paid: 'mark paid', expired: 'mark expired', pending: 'mark unpaid' };
-                const statusMap = { paid: 'completed', expired: 'expired', pending: 'pending' };
-                const ok = await confirmDialog(`${labels[action][0].toUpperCase() + labels[action].slice(1)}?`, `Set "${name}" to ${labels[action]}?`);
-                if (!ok) return;
-
-                try {
-                    const res = await apiCall(`/admin/schools/${id}/payment-status`, {
-                        method: 'PATCH',
-                        body: JSON.stringify({ status: statusMap[action] })
-                    });
-                    showToast(res.message || 'Updated.');
-                    loadSchools(); loadDashboard();
-                } catch (err) {
-                    showToast(err.message, true);
-                }
             }
 
             document.getElementById('schools-search').addEventListener('input', () => {
@@ -1159,7 +1110,7 @@
                 studentsSearchDebounce = setTimeout(() => { studentsPage = 1; loadStudents(); }, 350);
             });
             document.getElementById('students-prev').addEventListener('click', () => { if (studentsPage > 1) { studentsPage--; loadStudents(); } });
-            document.getElementById('students-next').addEventListener('click', () => { if (studentsPage < studentsTotalPages) { studentsPage++; loadStudents(); } });
+            document.getElementById('students-next').addEventListener('click', () => { if (studentsPage < studentsTotalPages) { schoolsPage++; loadStudents(); } });
 
             // ---------------- Push notifications ----------------
             const titleInput = document.getElementById('push-title');
@@ -1190,13 +1141,13 @@
                 if (!payload) return;
                 Object.assign(payload, extra || {});
 
-                const ok = await confirmDialog(`Send "${payload.title}"?`, `This will broadcast to: ${label}.`);
+                const ok = await confirmDialog('Send "' + payload.title + '"?', 'This will broadcast to: ' + label + '.');
                 if (!ok) return;
 
                 try {
-                    const res = await apiCall(`/admin/notifications/${endpoint}`, { method: 'POST', body: JSON.stringify(payload) });
-                    showToast(`Sent to ${label}.`);
-                    logSend(label, true, `${res.sent || 0} sent, ${res.failed || 0} failed (of ${res.total ?? '—'})`);
+                    const res = await apiCall('/admin/notifications/' + endpoint, { method: 'POST', body: JSON.stringify(payload) });
+                    showToast('Sent to ' + label + '.');
+                    logSend(label, true, (res.sent || 0) + ' sent, ' + (res.failed || 0) + ' failed (of ' + (res.total ?? '—') + ')');
                 } catch (err) {
                     showToast(err.message, true);
                     logSend(label, false, err.message);
@@ -1217,22 +1168,22 @@
                 try {
                     const res = await apiCall('/admin/notifications/send-one', { method: 'POST', body: JSON.stringify(payload) });
                     showToast(res.message || 'Sent.');
-                    logSend(`School #${schoolId}`, true, res.message || 'Delivered');
+                    logSend('School #' + schoolId, true, res.message || 'Delivered');
                 } catch (err) {
                     showToast(err.message, true);
-                    logSend(`School #${schoolId}`, false, err.message);
+                    logSend('School #' + schoolId, false, err.message);
                 }
             });
 
             document.getElementById('send-version-btn').addEventListener('click', async () => {
                 const version = document.getElementById('version-input').value.trim();
                 if (!version) { showToast('Enter a version number.', true); return; }
-                const ok = await confirmDialog('Notify outdated devices?', `Nudge every device not on version ${version} to update.`);
+                const ok = await confirmDialog('Notify outdated devices?', 'Nudge every device not on version ' + version + ' to update.');
                 if (!ok) return;
                 try {
                     const res = await apiCall('/admin/notifications/version-update', { method: 'POST', body: JSON.stringify({ current_version: version }) });
-                    showToast(`Notified ${res.sent || 0} devices.`);
-                    logSend('Version update nudge', true, `${res.sent || 0} sent, ${res.failed || 0} failed`);
+                    showToast('Notified ' + (res.sent || 0) + ' devices.');
+                    logSend('Version update nudge', true, (res.sent || 0) + ' sent, ' + (res.failed || 0) + ' failed');
                 } catch (err) {
                     showToast(err.message, true);
                     logSend('Version update nudge', false, err.message);
